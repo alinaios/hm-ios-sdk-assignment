@@ -10,19 +10,21 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             content
-                .navigationTitle("H&M Product")
+                .navigationTitle(Text(AppString.productNavigationTitle.resource))
                 .navigationBarTitleDisplayMode(.inline)
                 .task {
                     await viewModel.loadProduct()
                 }
                 .toolbar {
-                    Button("New Product") {
+                    Button {
                         Task {
                             await viewModel.loadProduct()
                         }
+                    } label: {
+                        Text(AppString.newProduct.resource)
                     }
                     .accessibilityIdentifier("newProductButton")
-                    .accessibilityLabel("Load a new random product")
+                    .accessibilityLabel(Text(AppString.newProductAccessibilityLabel.resource))
                 }
         }
     }
@@ -31,9 +33,11 @@ struct ContentView: View {
     private var content: some View {
         switch viewModel.state {
         case .idle, .loading:
-            ProgressView("Loading product")
+            ProgressView {
+                Text(AppString.loadingProduct.resource)
+            }
                 .accessibilityIdentifier("loadingView")
-                .accessibilityLabel("Loading product")
+                .accessibilityLabel(Text(AppString.loadingProduct.resource))
 
         case .loaded(let product, let image):
             LoadedProductView(

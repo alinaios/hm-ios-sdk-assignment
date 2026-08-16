@@ -61,6 +61,20 @@ final class ProductViewModelTests: XCTestCase {
         XCTAssertEqual(message, "No internet connection. Check your connection and try again.")
     }
 
+    func testLoadProductPublishesOfflineMessageWhenRequestTimesOut() async {
+        let viewModel = ProductViewModel(
+            productImageLoader: FailingProductImageLoader(error: URLError(.timedOut))
+        )
+
+        await viewModel.loadProduct()
+
+        guard case .failed(let message) = viewModel.state else {
+            return XCTFail("Expected failed state")
+        }
+
+        XCTAssertEqual(message, "No internet connection. Check your connection and try again.")
+    }
+
     func testLoadProductUsesInjectedErrorMessageMapper() async {
         let viewModel = ProductViewModel(
             productImageLoader: FailingProductImageLoader(error: URLError(.timedOut)),

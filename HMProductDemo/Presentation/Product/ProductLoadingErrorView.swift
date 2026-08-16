@@ -6,7 +6,7 @@ struct ProductLoadingErrorView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Text("Unable to load product")
+            Text(AppString.unableToLoadProduct.resource)
                 .font(.headline)
                 .accessibilityIdentifier("errorTitle")
 
@@ -16,7 +16,9 @@ struct ProductLoadingErrorView: View {
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("errorMessage")
 
-            Button("Try Again", action: retry)
+            Button(action: retry) {
+                Text(AppString.retry.resource)
+            }
                 .buttonStyle(.borderedProminent)
                 .accessibilityIdentifier("retryButton")
         }

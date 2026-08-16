@@ -19,7 +19,7 @@ struct LoadedProductView: View {
                 .accessibilityIdentifier("productImage")
                 .accessibilityLabel(
                     String(
-                        format: String(localized: "Product image for %@"),
+                        format: AppString.productImageAccessibilityLabelFormat.localized,
                         product.name
                     )
                 )

@@ -123,6 +123,7 @@
       }
     },
     "Unable to load product" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

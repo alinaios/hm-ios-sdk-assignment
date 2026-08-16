@@ -10,12 +10,26 @@ struct ProductViewModelFactory {
             )
         }
 
+        let urlSession = makeProductLoadingURLSession()
+
         return ProductViewModel(
             productImageLoader: ProductImageLoader(
-                productFetcher: HMBrowseProductClient(),
-                imageLoader: RemoteImageLoader(),
+                productFetcher: HMBrowseProductClient(
+                    httpClient: URLSessionHTTPClient(urlSession: urlSession)
+                ),
+                imageLoader: RemoteImageLoader(
+                    dataLoader: URLSessionImageDataLoader(urlSession: urlSession)
+                ),
                 imageProcessor: LiveImageProcessor()
             )
         )
+    }
+
+    private func makeProductLoadingURLSession() -> URLSession {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.timeoutIntervalForRequest = 8
+        configuration.timeoutIntervalForResource = 12
+        configuration.waitsForConnectivity = false
+        return URLSession(configuration: configuration)
     }
 }
