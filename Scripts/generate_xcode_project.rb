@@ -27,7 +27,7 @@ ui_tests = project.new_target(:ui_test_bundle, "HMProductDemoUITests", :ios, "26
 unit_tests.add_dependency(app)
 ui_tests.add_dependency(app)
 
-def add_sources(target, group, paths)
+def add_files(build_phase, group, paths)
   paths.each do |path|
     parent = group
     File.dirname(path).split("/").drop(1).each do |folder|
@@ -37,8 +37,16 @@ def add_sources(target, group, paths)
     end
 
     file = parent.new_file(path)
-    target.add_file_references([file])
+    build_phase.add_file_reference(file)
   end
+end
+
+def add_sources(target, group, paths)
+  add_files(target.source_build_phase, group, paths)
+end
+
+def add_resources(target, group, paths)
+  add_files(target.resources_build_phase, group, paths)
 end
 
 add_sources(
@@ -55,6 +63,11 @@ add_sources(
   ui_tests,
   ui_tests_group,
   Dir["HMProductDemoUITests/**/*.swift"].sort
+)
+add_resources(
+  app,
+  app_group,
+  Dir["HMProductDemo/**/*.{xcstrings}"].sort
 )
 
 local_package = project.new(Xcodeproj::Project::Object::XCLocalSwiftPackageReference)

@@ -1,3 +1,4 @@
+import Foundation
 import ProductClient
 import SwiftUI
 import UIKit
@@ -16,7 +17,12 @@ struct LoadedProductView: View {
                 .frame(maxHeight: 460)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .accessibilityIdentifier("productImage")
-                .accessibilityLabel("Product image for \(product.name)")
+                .accessibilityLabel(
+                    String(
+                        format: String(localized: "Product image for %@"),
+                        product.name
+                    )
+                )
 
             Text(product.name)
                 .font(.title2.weight(.semibold))

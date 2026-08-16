@@ -5,12 +5,12 @@ struct ProductErrorMessageMapper: ErrorMessageMapping {
         if let urlError = error as? URLError {
             switch urlError.code {
             case .notConnectedToInternet, .networkConnectionLost, .cannotFindHost, .cannotConnectToHost:
-                return "No internet connection. Check your connection and try again."
+                return String(localized: "No internet connection. Check your connection and try again.")
             default:
                 break
             }
         }
 
-        return "Something went wrong while loading the product. Please try again."
+        return String(localized: "Something went wrong while loading the product. Please try again.")
     }
 }

@@ -7,7 +7,7 @@ struct SampleProductImageLoader: ProductImageLoading {
     func loadProductImage() async throws -> ProductImage {
         let product = Product(
             id: "sample-jeans",
-            name: "Sample H&M Jeans",
+            name: String(localized: "Sample H&M Jeans"),
             imageURL: URL(string: "https://example.com/jeans.jpg")!
         )
         let originalImage = sampleImage(

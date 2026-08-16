@@ -13,7 +13,7 @@ final class ProductViewModel: ObservableObject {
     }
 
     @Published private(set) var state: State = .idle
-    @Published private(set) var displayModeTitle = "Original image"
+    @Published private(set) var displayModeTitle = String(localized: "Original image")
 
     private let productImageLoader: ProductImageLoading
     private let errorMessageMapper: ErrorMessageMapping
@@ -49,7 +49,7 @@ final class ProductViewModel: ObservableObject {
             processedImage = productImage.processedImage
             loadedProduct = productImage.product
             isShowingProcessedImage = false
-            displayModeTitle = "Original image"
+            displayModeTitle = String(localized: "Original image")
             state = .loaded(productImage.product, productImage.originalImage)
             startSwitchingImages()
         } catch {
@@ -76,7 +76,9 @@ final class ProductViewModel: ObservableObject {
         }
 
         isShowingProcessedImage.toggle()
-        displayModeTitle = isShowingProcessedImage ? "Processed image" : "Original image"
+        displayModeTitle = isShowingProcessedImage
+            ? String(localized: "Processed image")
+            : String(localized: "Original image")
         state = .loaded(product, isShowingProcessedImage ? processedImage : originalImage)
     }
 
