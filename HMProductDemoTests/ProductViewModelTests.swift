@@ -1,4 +1,6 @@
+import Foundation
 import ProductClient
+import UIKit
 import XCTest
 @testable import HMProductDemo
 
@@ -10,8 +12,8 @@ final class ProductViewModelTests: XCTestCase {
             name: "Test Jeans",
             imageURL: URL(string: "https://example.com/image.jpg")!
         )
-        let image = solidColorImage(.blue, size: CGSize(width: 10, height: 10))
-        let processedImage = solidColorImage(.red, size: CGSize(width: 10, height: 10))
+        let image = testImage(.blue, size: CGSize(width: 10, height: 10))
+        let processedImage = testImage(.red, size: CGSize(width: 10, height: 10))
         let viewModel = ProductViewModel(
             productImageLoader: StubProductImageLoader(
                 productImage: ProductImage(
@@ -113,13 +115,13 @@ final class ProductViewModelTests: XCTestCase {
                 productImages: [
                     ProductImage(
                         product: firstProduct,
-                        originalImage: solidColorImage(.blue, size: CGSize(width: 10, height: 10)),
-                        processedImage: solidColorImage(.red, size: CGSize(width: 10, height: 10))
+                        originalImage: testImage(.blue, size: CGSize(width: 10, height: 10)),
+                        processedImage: testImage(.red, size: CGSize(width: 10, height: 10))
                     ),
                     ProductImage(
                         product: secondProduct,
-                        originalImage: solidColorImage(.blue, size: CGSize(width: 10, height: 10)),
-                        processedImage: solidColorImage(.red, size: CGSize(width: 10, height: 10))
+                        originalImage: testImage(.blue, size: CGSize(width: 10, height: 10)),
+                        processedImage: testImage(.red, size: CGSize(width: 10, height: 10))
                     )
                 ]
             )
@@ -142,8 +144,8 @@ final class ProductViewModelTests: XCTestCase {
             name: "Test Jeans",
             imageURL: URL(string: "https://example.com/image.jpg")!
         )
-        let image = solidColorImage(.blue, size: CGSize(width: 10, height: 10))
-        let processedImage = solidColorImage(.red, size: CGSize(width: 10, height: 10))
+        let image = testImage(.blue, size: CGSize(width: 10, height: 10))
+        let processedImage = testImage(.red, size: CGSize(width: 10, height: 10))
         let loader = ProductImageLoader(
             productFetcher: StubProductFetcher(product: product),
             imageLoader: StubImageLoader(image: image),
@@ -155,88 +157,5 @@ final class ProductViewModelTests: XCTestCase {
         XCTAssertEqual(productImage.product, product)
         XCTAssertEqual(productImage.originalImage.pngData(), image.pngData())
         XCTAssertEqual(productImage.processedImage.pngData(), processedImage.pngData())
-    }
-}
-
-@MainActor
-private struct StubProductImageLoader: ProductImageLoading {
-    let productImage: ProductImage
-
-    func loadProductImage() async throws -> ProductImage {
-        productImage
-    }
-}
-
-@MainActor
-private struct FailingProductImageLoader: ProductImageLoading {
-    let error: Error
-
-    init(error: Error = URLError(.notConnectedToInternet)) {
-        self.error = error
-    }
-
-    func loadProductImage() async throws -> ProductImage {
-        throw error
-    }
-}
-
-@MainActor
-private final class SequencedProductImageLoader: ProductImageLoading {
-    private let productImages: [ProductImage]
-    private var index = 0
-
-    init(productImages: [ProductImage]) {
-        self.productImages = productImages
-    }
-
-    func loadProductImage() async throws -> ProductImage {
-        let productImage = productImages[min(index, productImages.count - 1)]
-        index += 1
-        return productImage
-    }
-}
-
-private struct StubProductFetcher: ProductFetching {
-    let product: Product
-
-    func randomProduct() async throws -> Product {
-        product
-    }
-}
-
-@MainActor
-private struct StubImageLoader: ImageLoading {
-    let image: UIImage
-
-    func image(from url: URL) async throws -> UIImage {
-        image
-    }
-}
-
-@MainActor
-private struct StubImageProcessor: AppImageProcessing {
-    let image: UIImage
-
-    func process(_ image: UIImage) -> UIImage {
-        self.image
-    }
-}
-
-@MainActor
-private struct StubErrorMessageMapper: ErrorMessageMapping {
-    let message: String
-
-    func message(for error: Error) -> String {
-        message
-    }
-}
-
-@MainActor
-private struct StubImageDataLoader: ImageDataLoading {
-    let data: Data
-    let response: URLResponse
-
-    func data(from url: URL) async throws -> (Data, URLResponse) {
-        (data, response)
     }
 }

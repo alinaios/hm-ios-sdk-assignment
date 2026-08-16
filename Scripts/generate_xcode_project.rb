@@ -49,12 +49,12 @@ add_sources(
 add_sources(
   unit_tests,
   tests_group,
-  Dir["HMProductDemoTests/*.swift"].sort
+  Dir["HMProductDemoTests/**/*.swift"].sort
 )
 add_sources(
   ui_tests,
   ui_tests_group,
-  Dir["HMProductDemoUITests/*.swift"].sort
+  Dir["HMProductDemoUITests/**/*.swift"].sort
 )
 
 local_package = project.new(Xcodeproj::Project::Object::XCLocalSwiftPackageReference)

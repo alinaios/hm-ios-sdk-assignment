@@ -55,11 +55,7 @@ struct ContentView: View {
 #Preview {
     ContentView(
         viewModel: ProductViewModel(
-            productImageLoader: ProductImageLoader(
-                productFetcher: PreviewProductFetcher(),
-                imageLoader: PreviewImageLoader(),
-                imageProcessor: LiveImageProcessor()
-            )
+            productImageLoader: SampleProductImageLoader()
         )
     )
 }
