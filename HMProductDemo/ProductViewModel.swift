@@ -15,9 +15,7 @@ final class ProductViewModel: ObservableObject {
     @Published private(set) var state: State = .idle
     @Published private(set) var displayModeTitle = "Original image"
 
-    private let productFetcher: ProductFetching
-    private let imageLoader: ImageLoading
-    private let imageProcessor: AppImageProcessing
+    private let productImageLoader: ProductImageLoading
     private let errorMessageMapper: ErrorMessageMapping
     private var originalImage: UIImage?
     private var processedImage: UIImage?
@@ -26,14 +24,10 @@ final class ProductViewModel: ObservableObject {
     private var switchTask: Task<Void, Never>?
 
     init(
-        productFetcher: ProductFetching,
-        imageLoader: ImageLoading,
-        imageProcessor: AppImageProcessing,
+        productImageLoader: ProductImageLoading,
         errorMessageMapper: ErrorMessageMapping = ProductErrorMessageMapper()
     ) {
-        self.productFetcher = productFetcher
-        self.imageLoader = imageLoader
-        self.imageProcessor = imageProcessor
+        self.productImageLoader = productImageLoader
         self.errorMessageMapper = errorMessageMapper
     }
 
@@ -49,16 +43,14 @@ final class ProductViewModel: ObservableObject {
         breakSwitching()
         state = .loading
         do {
-            let product = try await productFetcher.randomProduct()
-            let image = try await imageLoader.image(from: product.imageURL)
-            let processedImage = imageProcessor.process(image)
+            let productImage = try await productImageLoader.loadProductImage()
 
-            originalImage = image
-            self.processedImage = processedImage
-            loadedProduct = product
+            originalImage = productImage.originalImage
+            processedImage = productImage.processedImage
+            loadedProduct = productImage.product
             isShowingProcessedImage = false
             displayModeTitle = "Original image"
-            state = .loaded(product, image)
+            state = .loaded(productImage.product, productImage.originalImage)
             startSwitchingImages()
         } catch {
             state = .failed(errorMessageMapper.message(for: error))
@@ -95,6 +87,45 @@ final class ProductViewModel: ObservableObject {
 }
 
 @MainActor
+protocol ProductImageLoading {
+    func loadProductImage() async throws -> ProductImage
+}
+
+struct ProductImage {
+    let product: Product
+    let originalImage: UIImage
+    let processedImage: UIImage
+}
+
+struct ProductImageLoader: ProductImageLoading {
+    private let productFetcher: ProductFetching
+    private let imageLoader: ImageLoading
+    private let imageProcessor: AppImageProcessing
+
+    init(
+        productFetcher: ProductFetching,
+        imageLoader: ImageLoading,
+        imageProcessor: AppImageProcessing
+    ) {
+        self.productFetcher = productFetcher
+        self.imageLoader = imageLoader
+        self.imageProcessor = imageProcessor
+    }
+
+    func loadProductImage() async throws -> ProductImage {
+        let product = try await productFetcher.randomProduct()
+        let image = try await imageLoader.image(from: product.imageURL)
+        let processedImage = imageProcessor.process(image)
+
+        return ProductImage(
+            product: product,
+            originalImage: image,
+            processedImage: processedImage
+        )
+    }
+}
+
+@MainActor
 protocol ErrorMessageMapping {
     func message(for error: Error) -> String
 }
@@ -119,16 +150,20 @@ struct ProductViewModelFactory {
     func makeDefault() -> ProductViewModel {
         if ProcessInfo.processInfo.environment["UITEST_USE_SAMPLE_DATA"] == "1" {
             return ProductViewModel(
-                productFetcher: PreviewProductFetcher(),
-                imageLoader: PreviewImageLoader(),
-                imageProcessor: LiveImageProcessor()
+                productImageLoader: ProductImageLoader(
+                    productFetcher: PreviewProductFetcher(),
+                    imageLoader: PreviewImageLoader(),
+                    imageProcessor: LiveImageProcessor()
+                )
             )
         }
 
         return ProductViewModel(
-            productFetcher: HMBrowseProductClient(),
-            imageLoader: RemoteImageLoader(),
-            imageProcessor: LiveImageProcessor()
+            productImageLoader: ProductImageLoader(
+                productFetcher: HMBrowseProductClient(),
+                imageLoader: RemoteImageLoader(),
+                imageProcessor: LiveImageProcessor()
+            )
         )
     }
 }

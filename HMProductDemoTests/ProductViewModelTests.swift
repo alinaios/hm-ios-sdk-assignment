@@ -13,9 +13,13 @@ final class ProductViewModelTests: XCTestCase {
         let image = solidColorImage(.blue, size: CGSize(width: 10, height: 10))
         let processedImage = solidColorImage(.red, size: CGSize(width: 10, height: 10))
         let viewModel = ProductViewModel(
-            productFetcher: StubProductFetcher(product: product),
-            imageLoader: StubImageLoader(image: image),
-            imageProcessor: StubImageProcessor(image: processedImage)
+            productImageLoader: StubProductImageLoader(
+                productImage: ProductImage(
+                    product: product,
+                    originalImage: image,
+                    processedImage: processedImage
+                )
+            )
         )
 
         await viewModel.loadProduct()
@@ -31,9 +35,7 @@ final class ProductViewModelTests: XCTestCase {
 
     func testLoadProductPublishesFailureState() async {
         let viewModel = ProductViewModel(
-            productFetcher: FailingProductFetcher(),
-            imageLoader: StubImageLoader(image: UIImage()),
-            imageProcessor: StubImageProcessor(image: UIImage())
+            productImageLoader: FailingProductImageLoader()
         )
 
         await viewModel.loadProduct()
@@ -45,9 +47,7 @@ final class ProductViewModelTests: XCTestCase {
 
     func testLoadProductPublishesOfflineMessageWhenNetworkIsUnavailable() async {
         let viewModel = ProductViewModel(
-            productFetcher: FailingProductFetcher(error: URLError(.notConnectedToInternet)),
-            imageLoader: StubImageLoader(image: UIImage()),
-            imageProcessor: StubImageProcessor(image: UIImage())
+            productImageLoader: FailingProductImageLoader(error: URLError(.notConnectedToInternet))
         )
 
         await viewModel.loadProduct()
@@ -61,9 +61,7 @@ final class ProductViewModelTests: XCTestCase {
 
     func testLoadProductUsesInjectedErrorMessageMapper() async {
         let viewModel = ProductViewModel(
-            productFetcher: FailingProductFetcher(error: URLError(.timedOut)),
-            imageLoader: StubImageLoader(image: UIImage()),
-            imageProcessor: StubImageProcessor(image: UIImage()),
+            productImageLoader: FailingProductImageLoader(error: URLError(.timedOut)),
             errorMessageMapper: StubErrorMessageMapper(message: "Custom failure")
         )
 
@@ -111,9 +109,20 @@ final class ProductViewModelTests: XCTestCase {
             imageURL: URL(string: "https://example.com/second.jpg")!
         )
         let viewModel = ProductViewModel(
-            productFetcher: SequencedProductFetcher(products: [firstProduct, secondProduct]),
-            imageLoader: StubImageLoader(image: solidColorImage(.blue, size: CGSize(width: 10, height: 10))),
-            imageProcessor: StubImageProcessor(image: solidColorImage(.red, size: CGSize(width: 10, height: 10)))
+            productImageLoader: SequencedProductImageLoader(
+                productImages: [
+                    ProductImage(
+                        product: firstProduct,
+                        originalImage: solidColorImage(.blue, size: CGSize(width: 10, height: 10)),
+                        processedImage: solidColorImage(.red, size: CGSize(width: 10, height: 10))
+                    ),
+                    ProductImage(
+                        product: secondProduct,
+                        originalImage: solidColorImage(.blue, size: CGSize(width: 10, height: 10)),
+                        processedImage: solidColorImage(.red, size: CGSize(width: 10, height: 10))
+                    )
+                ]
+            )
         )
 
         await viewModel.loadProduct()
@@ -126,6 +135,65 @@ final class ProductViewModelTests: XCTestCase {
         XCTAssertEqual(loadedProduct, secondProduct)
         XCTAssertEqual(viewModel.displayModeTitle, "Original image")
     }
+
+    func testProductImageLoaderFetchesImageAndProcessesIt() async throws {
+        let product = Product(
+            id: "1",
+            name: "Test Jeans",
+            imageURL: URL(string: "https://example.com/image.jpg")!
+        )
+        let image = solidColorImage(.blue, size: CGSize(width: 10, height: 10))
+        let processedImage = solidColorImage(.red, size: CGSize(width: 10, height: 10))
+        let loader = ProductImageLoader(
+            productFetcher: StubProductFetcher(product: product),
+            imageLoader: StubImageLoader(image: image),
+            imageProcessor: StubImageProcessor(image: processedImage)
+        )
+
+        let productImage = try await loader.loadProductImage()
+
+        XCTAssertEqual(productImage.product, product)
+        XCTAssertEqual(productImage.originalImage.pngData(), image.pngData())
+        XCTAssertEqual(productImage.processedImage.pngData(), processedImage.pngData())
+    }
+}
+
+@MainActor
+private struct StubProductImageLoader: ProductImageLoading {
+    let productImage: ProductImage
+
+    func loadProductImage() async throws -> ProductImage {
+        productImage
+    }
+}
+
+@MainActor
+private struct FailingProductImageLoader: ProductImageLoading {
+    let error: Error
+
+    init(error: Error = URLError(.notConnectedToInternet)) {
+        self.error = error
+    }
+
+    func loadProductImage() async throws -> ProductImage {
+        throw error
+    }
+}
+
+@MainActor
+private final class SequencedProductImageLoader: ProductImageLoading {
+    private let productImages: [ProductImage]
+    private var index = 0
+
+    init(productImages: [ProductImage]) {
+        self.productImages = productImages
+    }
+
+    func loadProductImage() async throws -> ProductImage {
+        let productImage = productImages[min(index, productImages.count - 1)]
+        index += 1
+        return productImage
+    }
 }
 
 private struct StubProductFetcher: ProductFetching {
@@ -133,33 +201,6 @@ private struct StubProductFetcher: ProductFetching {
 
     func randomProduct() async throws -> Product {
         product
-    }
-}
-
-private struct FailingProductFetcher: ProductFetching {
-    let error: Error
-
-    init(error: Error = URLError(.notConnectedToInternet)) {
-        self.error = error
-    }
-
-    func randomProduct() async throws -> Product {
-        throw error
-    }
-}
-
-private actor SequencedProductFetcher: ProductFetching {
-    private let products: [Product]
-    private var index = 0
-
-    init(products: [Product]) {
-        self.products = products
-    }
-
-    func randomProduct() async throws -> Product {
-        let product = products[min(index, products.count - 1)]
-        index += 1
-        return product
     }
 }
 
