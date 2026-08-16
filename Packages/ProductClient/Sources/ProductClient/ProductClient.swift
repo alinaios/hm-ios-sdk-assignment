@@ -5,32 +5,53 @@ public protocol ProductFetching: Sendable {
 }
 
 public enum ProductClientError: Error, Equatable, Sendable {
+    case invalidURL
     case invalidResponse
     case noProducts
 }
 
 public struct HMBrowseProductClient: ProductFetching {
-    private let endpoint: URL
+    private let endpoint: APIEndpoint
     private let httpClient: HTTPClient
     private let responseDecoder: ProductResponseDecoder
     private let productSelector: ProductSelecting
 
     public init(
-        endpoint: URL? = nil,
+        endpoint: APIEndpoint? = nil,
         httpClient: HTTPClient = URLSessionHTTPClient(),
         responseDecoder: ProductResponseDecoder = ProductResponseDecoder(),
         productSelector: ProductSelecting = RandomProductSelector()
     ) {
-        self.endpoint = endpoint ?? URL(
-            string: "https://api.hm.com/search-services/v1/sv_se/search/resultpage?touchPoint=ios&query=jeans&page=1"
-        )!
+        self.endpoint = endpoint ?? APIEndpoint(
+            baseURL: URL(string: "https://api.hm.com")!,
+            path: "/search-services/v1/sv_se/search/resultpage",
+            queryItems: [
+                URLQueryItem(name: "touchPoint", value: "ios"),
+                URLQueryItem(name: "query", value: "jeans"),
+                URLQueryItem(name: "page", value: "1")
+            ]
+        )
         self.httpClient = httpClient
         self.responseDecoder = responseDecoder
         self.productSelector = productSelector
     }
 
+    public init(
+        endpoint: URL,
+        httpClient: HTTPClient = URLSessionHTTPClient(),
+        responseDecoder: ProductResponseDecoder = ProductResponseDecoder(),
+        productSelector: ProductSelecting = RandomProductSelector()
+    ) {
+        self.init(
+            endpoint: APIEndpoint(url: endpoint),
+            httpClient: httpClient,
+            responseDecoder: responseDecoder,
+            productSelector: productSelector
+        )
+    }
+
     public func randomProduct() async throws -> Product {
-        let request = URLRequest(url: endpoint)
+        let request = try endpoint.urlRequest()
         let data = try await httpClient.data(for: request)
         let products = try responseDecoder.decodeProducts(from: data)
 
