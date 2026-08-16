@@ -1,52 +1,73 @@
 # HMProductDemo
 
-A small SwiftUI iOS app for the H&M iOS SDK Engineer assignment. The app fetches one random jeans product, displays its name and image, processes the image through a local XCFramework, and alternates between the original and processed image every second.
+A small SwiftUI app for the H&M iOS SDK Engineer assignment. It loads a random jeans product, shows the product image, processes that image with a local XCFramework, and switches between the original and processed image every second.
 
-The toolbar includes a `New Product` action so reviewers can trigger another random product fetch without restarting the app.
+## Build And Run
 
-## Requirements
+| Step | Action |
+| --- | --- |
+| 1 | Open `HMProductDemo.xcodeproj` in Xcode. |
+| 2 | Select the `HMProductDemo` scheme. |
+| 3 | Run on an iOS 26 simulator or device. |
 
-- Xcode 26.6 or later
-- Swift 6
-- iOS 26 simulator or device
+Requirements: Xcode with iOS 26 support, Swift 6, and network access for the live product API.
 
-## Build and Run
+## Requirement Coverage
 
-1. Open `HMProductDemo.xcodeproj`.
-2. Select the `HMProductDemo` scheme.
-3. Run on an iOS 26 simulator.
-
-The app uses the live H&M endpoint from the assignment:
-
-`https://api.hm.com/search-services/v1/sv_se/search/resultpage?touchPoint=ios&query=jeans&page=1`
+| Assignment item | Where it is handled |
+| --- | --- |
+| SwiftUI app | `HMProductDemo` app target |
+| Swift 6, iOS 26, strict concurrency | Project and package build settings |
+| Random product from H&M API | `Packages/ProductClient` |
+| Product name and image | SwiftUI product screen |
+| Local XCFramework image processing | `Frameworks/ImageProcessor.xcframework` |
+| Red mask at 50% opacity | Image processor framework source |
+| Original/processed image switching | Product view model, every 1 second |
+| Unit and UI tests | App tests, package tests, framework tests |
+| Accessibility | Labels and identifiers on key UI elements |
 
 ## Architecture
 
-- `HMProductDemo`: SwiftUI app target. Owns presentation, loading state, image downloading, and one-second image switching.
-- `Packages/ProductClient`: Local Swift Package. Owns the H&M API request, HTTP response validation, response decoding, product filtering, and random selection.
-- `Frameworks/ImageProcessor.xcframework`: Local binary XCFramework embedded by the app. Owns image processing and applies a red mask at 50% opacity.
-- `Frameworks/ImageProcessorSource`: Source used to build the local XCFramework.
+| Area | Responsibility |
+| --- | --- |
+| App | Presents the screen, handles loading/error states, downloads the image, and wires dependencies together. |
+| ProductClient package | Fetches products, builds API requests, decodes the response, and selects one product. |
+| ImageProcessor XCFramework | Receives an image, applies the red mask, and returns the processed image. |
 
-The app depends on abstractions for product fetching, image loading, and image processing. Inside `ProductClient`, request execution (`HTTPClient`), response decoding (`ProductResponseDecoder`), and random selection (`ProductSelecting`) are separated so the networking layer can be tested without the UI or live network.
+The app is intentionally the composition layer. Product API logic stays in the Swift Package, and image-processing logic stays in the XCFramework. This keeps the framework reusable and prevents product/network details from leaking into image processing.
 
 ## Testing
 
-Run tests from Xcode with `Command-U`, or from Terminal:
+| Test area | What it proves |
+| --- | --- |
+| App unit tests | Loading success, loading failure, offline/timeout errors, image processing flow, and product replacement. |
+| ProductClient tests | API request creation, response decoding, error handling, and random product selection. |
+| ImageProcessor tests | Red-mask processing behavior. |
+| UI test | The main screen renders with sample data without needing the network. |
+
+Run all main app tests:
 
 ```sh
 xcodebuild test -scheme HMProductDemo -destination 'platform=iOS Simulator,name=iPhone 17'
-swift test --package-path Packages/ProductClient
-cd Frameworks/ImageProcessorSource && xcodebuild test -scheme ImageProcessor -destination 'platform=iOS Simulator,name=iPhone 17'
 ```
 
-The unit tests cover product decoding, API error handling, image processing, and the view model loading states. The UI test launches with sample data so it does not depend on network availability.
+Run package tests:
+
+```sh
+swift test --package-path Packages/ProductClient
+swift test --package-path Frameworks/ImageProcessorSource
+```
 
 ## Accessibility
 
-The loading, image, product name, mode label, error, and retry controls include accessibility labels or identifiers. The product image label includes the product name.
+The screen includes accessibility support for loading, product image, product name, image mode, retry, and new-product controls. The UI test also uses stable identifiers for the main product screen elements.
 
-## Known Limitations and Trade-offs
+## Notes And Trade-offs
 
-- The product endpoint is live, so the app depends on network availability and the current H&M API response shape.
-- Image downloading remains in the app because the assignment only delegates product fetching to the Swift Package.
-- The XCFramework source is included for review, but the app links the built local binary framework.
+| Topic | Decision |
+| --- | --- |
+| Live API | The app uses the assignment endpoint, so product loading depends on network availability and the current API response shape. |
+| Offline behavior | Network failures and request timeouts show a user-facing error with retry. |
+| Image downloading | Kept in the app because the assignment only requires product fetching in the Swift Package. |
+| XCFramework source | Included for review, while the app links the local built XCFramework. |
+| Extra button | A `New Product` button lets reviewers fetch another random product without restarting the app. |
