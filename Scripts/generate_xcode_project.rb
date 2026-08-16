@@ -29,7 +29,14 @@ ui_tests.add_dependency(app)
 
 def add_sources(target, group, paths)
   paths.each do |path|
-    file = group.new_file(path)
+    parent = group
+    File.dirname(path).split("/").drop(1).each do |folder|
+      parent = parent.find_subpath(folder, true)
+      parent.name = folder
+      parent.source_tree = "<group>"
+    end
+
+    file = parent.new_file(path)
     target.add_file_references([file])
   end
 end
@@ -37,7 +44,7 @@ end
 add_sources(
   app,
   app_group,
-  Dir["HMProductDemo/*.swift"].sort
+  Dir["HMProductDemo/**/*.swift"].sort
 )
 add_sources(
   unit_tests,
