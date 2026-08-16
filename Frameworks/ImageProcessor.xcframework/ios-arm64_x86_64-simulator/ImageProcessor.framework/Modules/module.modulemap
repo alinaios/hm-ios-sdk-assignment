@@ -1,0 +1,3 @@
+framework module ImageProcessor {
+  header "ImageProcessor-Swift.h"
+}

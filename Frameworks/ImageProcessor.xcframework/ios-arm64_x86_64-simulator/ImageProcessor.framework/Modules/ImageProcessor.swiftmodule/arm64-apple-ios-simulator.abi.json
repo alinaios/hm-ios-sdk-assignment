@@ -1,0 +1,121 @@
+{
+  "ABIRoot": {
+    "kind": "Root",
+    "name": "ImageProcessor",
+    "printedName": "ImageProcessor",
+    "children": [
+      {
+        "kind": "Import",
+        "name": "UIKit",
+        "printedName": "UIKit",
+        "declKind": "Import",
+        "moduleName": "ImageProcessor"
+      },
+      {
+        "kind": "TypeDecl",
+        "name": "RedMaskImageProcessor",
+        "printedName": "RedMaskImageProcessor",
+        "children": [
+          {
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init()",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "RedMaskImageProcessor",
+                "printedName": "ImageProcessor.RedMaskImageProcessor",
+                "usr": "s:14ImageProcessor07RedMaskaB0V"
+              }
+            ],
+            "declKind": "Constructor",
+            "usr": "s:14ImageProcessor07RedMaskaB0VACycfc",
+            "mangledName": "$s14ImageProcessor07RedMaskaB0VACycfc",
+            "moduleName": "ImageProcessor",
+            "declAttributes": [
+              "Custom",
+              "AccessControl"
+            ],
+            "init_kind": "Designated"
+          },
+          {
+            "kind": "Function",
+            "name": "applyRedMask",
+            "printedName": "applyRedMask(to:opacity:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "UIImage",
+                "printedName": "UIKit.UIImage",
+                "usr": "c:objc(cs)UIImage"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "UIImage",
+                "printedName": "UIKit.UIImage",
+                "usr": "c:objc(cs)UIImage"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "CGFloat",
+                "printedName": "CoreGraphics.CGFloat",
+                "hasDefaultArg": true,
+                "usr": "s:14CoreFoundation7CGFloatV"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "s:14ImageProcessor07RedMaskaB0V05applycD02to7opacitySo7UIImageCAH_14CoreFoundation7CGFloatVtF",
+            "mangledName": "$s14ImageProcessor07RedMaskaB0V05applycD02to7opacitySo7UIImageCAH_12CoreGraphics7CGFloatVtF",
+            "moduleName": "ImageProcessor",
+            "declAttributes": [
+              "Custom",
+              "AccessControl"
+            ],
+            "funcSelfKind": "NonMutating"
+          }
+        ],
+        "declKind": "Struct",
+        "usr": "s:14ImageProcessor07RedMaskaB0V",
+        "mangledName": "$s14ImageProcessor07RedMaskaB0V",
+        "moduleName": "ImageProcessor",
+        "declAttributes": [
+          "AccessControl",
+          "Custom"
+        ],
+        "conformances": [
+          {
+            "kind": "Conformance",
+            "name": "Copyable",
+            "printedName": "Copyable",
+            "usr": "s:s8CopyableP",
+            "mangledName": "$ss8CopyableP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Escapable",
+            "printedName": "Escapable",
+            "usr": "s:s9EscapableP",
+            "mangledName": "$ss9EscapableP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Sendable",
+            "printedName": "Sendable",
+            "usr": "s:s8SendableP",
+            "mangledName": "$ss8SendableP"
+          }
+        ]
+      }
+    ],
+    "json_format_version": 8
+  },
+  "ConstValues": [
+    {
+      "filePath": "\/Users\/ah\/Documents\/HM Assignment\/Frameworks\/ImageProcessorSource\/Sources\/ImageProcessor\/ImageProcessor.swift",
+      "kind": "FloatLiteral",
+      "offset": 152,
+      "length": 3,
+      "value": "0.5"
+    }
+  ]
+}
