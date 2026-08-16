@@ -18,6 +18,7 @@ final class ProductViewModel: ObservableObject {
     private let productFetcher: ProductFetching
     private let imageLoader: ImageLoading
     private let imageProcessor: AppImageProcessing
+    private let errorMessageMapper: ErrorMessageMapping
     private var originalImage: UIImage?
     private var processedImage: UIImage?
     private var loadedProduct: Product?
@@ -27,11 +28,13 @@ final class ProductViewModel: ObservableObject {
     init(
         productFetcher: ProductFetching,
         imageLoader: ImageLoading,
-        imageProcessor: AppImageProcessing
+        imageProcessor: AppImageProcessing,
+        errorMessageMapper: ErrorMessageMapping = ProductErrorMessageMapper()
     ) {
         self.productFetcher = productFetcher
         self.imageLoader = imageLoader
         self.imageProcessor = imageProcessor
+        self.errorMessageMapper = errorMessageMapper
     }
 
     deinit {
@@ -58,7 +61,7 @@ final class ProductViewModel: ObservableObject {
             state = .loaded(product, image)
             startSwitchingImages()
         } catch {
-            state = .failed(failureMessage(for: error))
+            state = .failed(errorMessageMapper.message(for: error))
         }
     }
 
@@ -89,8 +92,15 @@ final class ProductViewModel: ObservableObject {
         switchTask?.cancel()
         switchTask = nil
     }
+}
 
-    private func failureMessage(for error: Error) -> String {
+@MainActor
+protocol ErrorMessageMapping {
+    func message(for error: Error) -> String
+}
+
+struct ProductErrorMessageMapper: ErrorMessageMapping {
+    func message(for error: Error) -> String {
         if let urlError = error as? URLError {
             switch urlError.code {
             case .notConnectedToInternet, .networkConnectionLost, .cannotFindHost, .cannotConnectToHost:

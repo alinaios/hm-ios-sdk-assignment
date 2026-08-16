@@ -11,9 +11,32 @@ enum ImageLoadingError: Error {
     case invalidResponse
 }
 
+@MainActor
+protocol ImageDataLoading {
+    func data(from url: URL) async throws -> (Data, URLResponse)
+}
+
+struct URLSessionImageDataLoader: ImageDataLoading {
+    private let urlSession: URLSession
+
+    init(urlSession: URLSession = .shared) {
+        self.urlSession = urlSession
+    }
+
+    func data(from url: URL) async throws -> (Data, URLResponse) {
+        try await urlSession.data(from: url)
+    }
+}
+
 struct RemoteImageLoader: ImageLoading {
+    private let dataLoader: ImageDataLoading
+
+    init(dataLoader: ImageDataLoading = URLSessionImageDataLoader()) {
+        self.dataLoader = dataLoader
+    }
+
     func image(from url: URL) async throws -> UIImage {
-        let (data, response) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await dataLoader.data(from: url)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200..<300).contains(httpResponse.statusCode) else {

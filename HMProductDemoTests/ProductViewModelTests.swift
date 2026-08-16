@@ -59,6 +59,46 @@ final class ProductViewModelTests: XCTestCase {
         XCTAssertEqual(message, "No internet connection. Check your connection and try again.")
     }
 
+    func testLoadProductUsesInjectedErrorMessageMapper() async {
+        let viewModel = ProductViewModel(
+            productFetcher: FailingProductFetcher(error: URLError(.timedOut)),
+            imageLoader: StubImageLoader(image: UIImage()),
+            imageProcessor: StubImageProcessor(image: UIImage()),
+            errorMessageMapper: StubErrorMessageMapper(message: "Custom failure")
+        )
+
+        await viewModel.loadProduct()
+
+        guard case .failed(let message) = viewModel.state else {
+            return XCTFail("Expected failed state")
+        }
+
+        XCTAssertEqual(message, "Custom failure")
+    }
+
+    func testRemoteImageLoaderRejectsInvalidImageData() async {
+        let loader = RemoteImageLoader(
+            dataLoader: StubImageDataLoader(
+                data: Data("not image data".utf8),
+                response: HTTPURLResponse(
+                    url: URL(string: "https://example.com/image.jpg")!,
+                    statusCode: 200,
+                    httpVersion: nil,
+                    headerFields: nil
+                )!
+            )
+        )
+
+        do {
+            _ = try await loader.image(from: URL(string: "https://example.com/image.jpg")!)
+            XCTFail("Expected invalid data error")
+        } catch ImageLoadingError.invalidData {
+            return
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
     func testLoadProductCanReplaceCurrentProduct() async throws {
         let firstProduct = Product(
             id: "1",
@@ -138,5 +178,24 @@ private struct StubImageProcessor: AppImageProcessing {
 
     func process(_ image: UIImage) -> UIImage {
         self.image
+    }
+}
+
+@MainActor
+private struct StubErrorMessageMapper: ErrorMessageMapping {
+    let message: String
+
+    func message(for error: Error) -> String {
+        message
+    }
+}
+
+@MainActor
+private struct StubImageDataLoader: ImageDataLoading {
+    let data: Data
+    let response: URLResponse
+
+    func data(from url: URL) async throws -> (Data, URLResponse) {
+        (data, response)
     }
 }
