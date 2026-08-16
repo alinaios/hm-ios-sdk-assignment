@@ -46,7 +46,11 @@ struct ProductClientTests {
 
     @Test
     func sendsRequestToConfiguredEndpoint() async throws {
-        let endpoint = URL(string: "https://example.com/products")!
+        let endpoint = APIEndpoint(
+            baseURL: URL(string: "https://example.com")!,
+            path: "/products"
+        )
+        let expectedURL = URL(string: "https://example.com/products")!
         let httpClient = RecordingHTTPClient(data: Data("""
         {
           "searchHits": {
@@ -65,7 +69,7 @@ struct ProductClientTests {
         _ = try await client.randomProduct()
 
         let requestedURL = await httpClient.requestedURL
-        #expect(requestedURL == endpoint)
+        #expect(requestedURL == expectedURL)
     }
 }
 

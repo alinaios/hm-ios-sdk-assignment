@@ -1,6 +1,6 @@
 # HMProductDemo
 
-A small SwiftUI app for the H&M iOS SDK Engineer assignment. It loads a random jeans product, shows the product image, processes that image with a local XCFramework, and switches between the original and processed image every second.
+This SwiftUI app was built for the H&M iOS SDK Engineer assignment. It loads a random jeans product, shows the product image, processes that image with a local XCFramework, and switches between the original and processed image every second.
 
 ## Build And Run
 
@@ -34,7 +34,52 @@ Requirements: Xcode with iOS 26 support, Swift 6, and network access for the liv
 | ProductClient package | Fetches products, builds API requests, decodes the response, and selects one product. |
 | ImageProcessor XCFramework | Receives an image, applies the red mask, and returns the processed image. |
 
-The app is intentionally the composition layer. Product API logic stays in the Swift Package, and image-processing logic stays in the XCFramework. This keeps the framework reusable and prevents product/network details from leaking into image processing.
+I kept the app as the composition layer. Product API logic stays in the Swift Package, and image-processing logic stays in the XCFramework. This keeps the framework reusable and prevents product/network details from leaking into image processing.
+
+```mermaid
+classDiagram
+    class ContentView {
+        SwiftUI screen
+        Shows product state
+    }
+
+    class ProductViewModel {
+        Loads product image
+        Starts image switching
+        Maps errors for display
+    }
+
+    class ProductImageSwitcher {
+        Owns original and processed display state
+        Toggles the visible image
+    }
+
+    class ProductImageLoader {
+        Combines product, image, and processor
+    }
+
+    class ProductClient {
+        Local Swift Package
+        Fetches and decodes product data
+        Selects a random product
+    }
+
+    class ImageLoading {
+        Downloads the product image
+    }
+
+    class ImageProcessor {
+        Local XCFramework
+        Applies red mask
+    }
+
+    ContentView --> ProductViewModel
+    ProductViewModel --> ProductImageLoader
+    ProductViewModel --> ProductImageSwitcher
+    ProductImageLoader --> ProductClient
+    ProductImageLoader --> ImageLoading
+    ProductImageLoader --> ImageProcessor
+```
 
 ## Testing
 
@@ -60,14 +105,14 @@ swift test --package-path Frameworks/ImageProcessorSource
 
 ## Accessibility
 
-The screen includes accessibility support for loading, product image, product name, image mode, retry, and new-product controls. The UI test also uses stable identifiers for the main product screen elements.
+I added accessibility support for loading, product image, product name, image mode, retry, and new-product controls. The UI test also uses stable identifiers for the main product screen elements.
 
 ## Notes And Trade-offs
 
 | Topic | Decision |
 | --- | --- |
-| Live API | The app uses the assignment endpoint, so product loading depends on network availability and the current API response shape. |
+| Live API | I used the assignment endpoint, so product loading depends on network availability and the current API response shape. |
 | Offline behavior | Network failures and request timeouts show a user-facing error with retry. |
-| Image downloading | Kept in the app because the assignment only requires product fetching in the Swift Package. |
-| XCFramework source | Included for review, while the app links the local built XCFramework. |
-| Extra button | A `New Product` button lets reviewers fetch another random product without restarting the app. |
+| Image downloading | I kept image downloading in the app because the assignment only requires product fetching in the Swift Package. |
+| XCFramework source | I included the source for transparency, while the app links the local built XCFramework. |
+| Extra button | I added a `New Product` button to fetch another random product without restarting the app. |

@@ -17,10 +17,7 @@ final class ProductViewModel: ObservableObject {
 
     private let productImageLoader: ProductImageLoading
     private let errorMessageMapper: ErrorMessageMapping
-    private var originalImage: UIImage?
-    private var processedImage: UIImage?
-    private var loadedProduct: Product?
-    private var isShowingProcessedImage = false
+    private var imageSwitcher: ProductImageSwitcher?
     private var switchTask: Task<Void, Never>?
 
     init(
@@ -41,16 +38,16 @@ final class ProductViewModel: ObservableObject {
         }
 
         breakSwitching()
+        imageSwitcher = nil
         state = .loading
         do {
             let productImage = try await productImageLoader.loadProductImage()
+            let imageSwitcher = ProductImageSwitcher(productImage: productImage)
+            let display = imageSwitcher.currentDisplay
 
-            originalImage = productImage.originalImage
-            processedImage = productImage.processedImage
-            loadedProduct = productImage.product
-            isShowingProcessedImage = false
-            displayModeTitle = AppString.displayModeOriginal.localized
-            state = .loaded(productImage.product, productImage.originalImage)
+            self.imageSwitcher = imageSwitcher
+            displayModeTitle = display.displayModeTitle
+            state = .loaded(display.product, display.image)
             startSwitchingImages()
         } catch {
             state = .failed(errorMessageMapper.message(for: error))
@@ -69,17 +66,14 @@ final class ProductViewModel: ObservableObject {
     }
 
     private func toggleDisplayedImage() {
-        guard let product = loadedProduct,
-              let originalImage,
-              let processedImage else {
+        guard var imageSwitcher else {
             return
         }
 
-        isShowingProcessedImage.toggle()
-        displayModeTitle = isShowingProcessedImage
-            ? AppString.displayModeProcessed.localized
-            : AppString.displayModeOriginal.localized
-        state = .loaded(product, isShowingProcessedImage ? processedImage : originalImage)
+        let display = imageSwitcher.toggle()
+        self.imageSwitcher = imageSwitcher
+        displayModeTitle = display.displayModeTitle
+        state = .loaded(display.product, display.image)
     }
 
     private func breakSwitching() {

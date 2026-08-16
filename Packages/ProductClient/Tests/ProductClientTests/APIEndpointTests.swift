@@ -30,12 +30,14 @@ struct APIEndpointTests {
     }
 
     @Test
-    func preservesFullURLWhenInitializedWithURL() throws {
-        let url = URL(string: "https://example.com/products?query=jeans&page=2")!
-        let endpoint = APIEndpoint(url: url)
+    func buildsRequestWithoutQueryItems() throws {
+        let endpoint = APIEndpoint(
+            baseURL: URL(string: "https://example.com")!,
+            path: "/products"
+        )
 
         let request = try endpoint.urlRequest()
 
-        #expect(request.url == url)
+        #expect(request.url == URL(string: "https://example.com/products"))
     }
 }

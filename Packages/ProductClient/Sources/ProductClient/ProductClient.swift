@@ -36,20 +36,6 @@ public struct HMBrowseProductClient: ProductFetching {
         self.productSelector = productSelector
     }
 
-    public init(
-        endpoint: URL,
-        httpClient: HTTPClient = URLSessionHTTPClient(),
-        responseDecoder: ProductResponseDecoder = ProductResponseDecoder(),
-        productSelector: ProductSelecting = RandomProductSelector()
-    ) {
-        self.init(
-            endpoint: APIEndpoint(url: endpoint),
-            httpClient: httpClient,
-            responseDecoder: responseDecoder,
-            productSelector: productSelector
-        )
-    }
-
     public func randomProduct() async throws -> Product {
         let request = try endpoint.urlRequest()
         let data = try await httpClient.data(for: request)
